@@ -44,10 +44,12 @@
         ref="inputRef"
         v-bind="textareaBindings"
         class="ww-input-basic"
-        :class="{ editing: isEditing }"
-        @input="handleManualInput"
+        :class="{ editing: isEditing, 'auto-grow': content.autoGrow }"
+        :style="scrollbarCssVars"
+        @input="handleTextareaInput"
         @focus="isReallyFocused = true"
         @blur="onBlur"
+        @keydown="handleTextareaKeydown"
         @keyup.enter="onEnter"
     />
     <input
@@ -522,6 +524,60 @@ export default {
             style: [style.value, { resize: props.content.resize ? '' : 'none' }],
         }));
 
+        const scrollbarCssVars = computed(() => {
+            if (props.content.type !== 'textarea') return {};
+            return {
+                '--scrollbar-width': (props.content.scrollbarWidth || 3) + 'px',
+                '--scrollbar-thumb-color': props.content.scrollbarThumbColor || 'rgba(255,255,255,0.08)',
+                '--scrollbar-track-color': props.content.scrollbarTrackColor || 'transparent',
+            };
+        });
+
+        function autoGrow(textarea) {
+            const maxHeight = props.content.autoGrowMaxHeight || 120;
+            textarea.style.height = 'auto';
+            const newHeight = Math.min(textarea.scrollHeight, maxHeight);
+            textarea.style.height = newHeight + 'px';
+            textarea.style.overflow = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+        }
+
+        function handleTextareaInput(event) {
+            handleManualInput(event);
+            if (props.content.autoGrow) {
+                autoGrow(event.target);
+            }
+        }
+
+        function sendMessage(textarea) {
+            const text = textarea.value.trim();
+            if (!text) return;
+
+            window.dispatchEvent(new CustomEvent('harlo-send-message', {
+                detail: { message: text },
+            }));
+
+            emit('trigger-event', { name: 'onEnterKey', event: { value: text } });
+            emit('trigger-event', { name: 'harloSend', event: { value: text } });
+
+            textarea.value = '';
+            setValue('');
+
+            if (props.content.autoGrow) {
+                textarea.style.height = 'auto';
+                textarea.style.overflow = 'hidden';
+            }
+
+            textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+
+        function handleTextareaKeydown(event) {
+            if (props.content.enterToSend && event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                event.stopPropagation();
+                sendMessage(event.target);
+            }
+        }
+
         const inputClasses = computed(() => ({
             hideArrows: props.content.hideArrows && inputType.value === 'number',
             'date-placeholder': props.content.type === 'date' && !variableValue.value,
@@ -641,6 +697,9 @@ export default {
             inputBindings,
             textareaBindings,
             inputClasses,
+            scrollbarCssVars,
+            handleTextareaInput,
+            handleTextareaKeydown,
             onEnter,
             handleColorInputClick,
             // Currency-related
@@ -731,6 +790,27 @@ export default {
     &.currency-type {
         background-color: transparent;
         width: 100%;
+    }
+
+    &.auto-grow {
+        overflow: hidden;
+        transition: height 0.1s ease;
+    }
+}
+
+textarea.ww-input-basic {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb-color, rgba(255,255,255,0.08)) var(--scrollbar-track-color, transparent);
+
+    &::-webkit-scrollbar {
+        width: var(--scrollbar-width, 3px);
+    }
+    &::-webkit-scrollbar-track {
+        background: var(--scrollbar-track-color, transparent);
+    }
+    &::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb-color, rgba(255,255,255,0.08));
+        border-radius: var(--scrollbar-width, 3px);
     }
 }
 </style>

@@ -32,6 +32,12 @@ export default {
                 'displayPassword',
                 'rows',
                 'resize',
+                'autoGrow',
+                'autoGrowMaxHeight',
+                'enterToSend',
+                'scrollbarWidth',
+                'scrollbarThumbColor',
+                'scrollbarTrackColor',
                 'currencyShowSymbol',
                 'currencySymbol',
                 'currencySymbolPosition',
@@ -65,6 +71,7 @@ export default {
         { name: 'change', label: { en: 'On change' }, event: { value: '' }, default: true },
         { name: 'initValueChange', label: { en: 'On init value change' }, event: { value: '' } },
         { name: 'onEnterKey', label: { en: 'On enter key' }, event: { value: '' } },
+        { name: 'harloSend', label: { en: 'On send message' }, event: { value: '' } },
         { name: 'focus', label: { en: 'On focus' }, event: null },
         { name: 'blur', label: { en: 'On blur' }, event: null },
     ],
@@ -271,6 +278,77 @@ export default {
             hidden: content => content.type !== 'textarea',
             defaultValue: false,
             classes: true,
+        },
+        autoGrow: {
+            label: { en: 'Auto grow' },
+            type: 'OnOff',
+            hidden: content => content.type !== 'textarea',
+            defaultValue: false,
+            classes: true,
+        },
+        autoGrowMaxHeight: {
+            label: { en: 'Max height (px)' },
+            type: 'Number',
+            options: { min: 36, max: 600, step: 1 },
+            hidden: content => content.type !== 'textarea' || !content.autoGrow,
+            defaultValue: 120,
+            bindable: true,
+            /* wwEditor:start */
+            bindingValidation: {
+                type: 'number',
+                tooltip: 'Max height in pixels before the textarea scrolls: `120`',
+            },
+            /* wwEditor:end */
+        },
+        enterToSend: {
+            label: { en: 'Enter to send' },
+            type: 'OnOff',
+            hidden: content => content.type !== 'textarea',
+            defaultValue: false,
+        },
+        scrollbarWidth: {
+            label: { en: 'Scrollbar width (px)' },
+            type: 'Number',
+            options: { min: 1, max: 20, step: 1 },
+            hidden: content => content.type !== 'textarea',
+            defaultValue: 3,
+            bindable: true,
+            /* wwEditor:start */
+            bindingValidation: {
+                type: 'number',
+                tooltip: 'Width of the custom scrollbar in pixels: `3`',
+            },
+            /* wwEditor:end */
+        },
+        scrollbarThumbColor: {
+            label: { en: 'Scrollbar thumb color' },
+            type: 'Color',
+            options: { nullable: true },
+            hidden: content => content.type !== 'textarea',
+            defaultValue: 'rgba(255,255,255,0.08)',
+            bindable: true,
+            /* wwEditor:start */
+            bindingValidation: {
+                cssSupports: 'color',
+                type: 'string',
+                tooltip: 'Color of the scrollbar thumb: `"rgba(255,255,255,0.08)"`',
+            },
+            /* wwEditor:end */
+        },
+        scrollbarTrackColor: {
+            label: { en: 'Scrollbar track color' },
+            type: 'Color',
+            options: { nullable: true },
+            hidden: content => content.type !== 'textarea',
+            defaultValue: 'transparent',
+            bindable: true,
+            /* wwEditor:start */
+            bindingValidation: {
+                cssSupports: 'color',
+                type: 'string',
+                tooltip: 'Color of the scrollbar track: `"transparent"`',
+            },
+            /* wwEditor:end */
         },
         min: {
             label: { en: 'Min number', fr: 'Min number' },
