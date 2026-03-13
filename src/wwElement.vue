@@ -45,7 +45,6 @@
         v-bind="textareaBindings"
         class="ww-input-basic"
         :class="{ editing: isEditing, 'auto-grow': content.autoGrow }"
-        :style="scrollbarCssVars"
         @input="handleTextareaInput"
         @focus="isReallyFocused = true"
         @blur="onBlur"
@@ -512,25 +511,45 @@ export default {
             step: stepAttribute.value,
         }));
 
-        const textareaBindings = computed(() => ({
-            ...props.wwElementState.props.attributes,
-            value: displayValue.value,
-            type: props.content.type,
-            name: props.wwElementState.name,
-            readonly: isReadonly.value || isEditing.value,
-            required: props.content.required,
-            placeholder: wwLib.wwLang.getText(props.content.placeholder),
-            rows: props.content.rows,
-            style: [style.value, { resize: props.content.resize ? '' : 'none' }],
-        }));
+        const textareaBindings = computed(() => {
+            const bindings = {
+                ...props.wwElementState.props.attributes,
+                value: displayValue.value,
+                type: props.content.type,
+                name: props.wwElementState.name,
+                readonly: isReadonly.value || isEditing.value,
+                required: props.content.required,
+                placeholder: wwLib.wwLang.getText(props.content.placeholder),
+            };
 
-        const scrollbarCssVars = computed(() => {
-            if (props.content.type !== 'textarea') return {};
-            return {
+            const scrollbarVars = {
                 '--scrollbar-width': (props.content.scrollbarWidth || 3) + 'px',
                 '--scrollbar-thumb-color': props.content.scrollbarThumbColor || 'rgba(255,255,255,0.08)',
                 '--scrollbar-track-color': props.content.scrollbarTrackColor || 'transparent',
             };
+
+            if (props.content.autoGrow) {
+                bindings.rows = 1;
+                bindings.style = [
+                    style.value,
+                    {
+                        resize: 'none',
+                        overflow: 'hidden',
+                        minHeight: '36px',
+                        maxHeight: (props.content.autoGrowMaxHeight || 120) + 'px',
+                    },
+                    scrollbarVars,
+                ];
+            } else {
+                bindings.rows = props.content.rows;
+                bindings.style = [
+                    style.value,
+                    { resize: props.content.resize ? '' : 'none' },
+                    scrollbarVars,
+                ];
+            }
+
+            return bindings;
         });
 
         function autoGrow(textarea) {
@@ -697,7 +716,6 @@ export default {
             inputBindings,
             textareaBindings,
             inputClasses,
-            scrollbarCssVars,
             handleTextareaInput,
             handleTextareaKeydown,
             onEnter,
@@ -798,19 +816,22 @@ export default {
     }
 }
 
+}
+</style>
+
+<style lang="scss">
 textarea.ww-input-basic {
     scrollbar-width: thin;
     scrollbar-color: var(--scrollbar-thumb-color, rgba(255,255,255,0.08)) var(--scrollbar-track-color, transparent);
-
-    &::-webkit-scrollbar {
-        width: var(--scrollbar-width, 3px);
-    }
-    &::-webkit-scrollbar-track {
-        background: var(--scrollbar-track-color, transparent);
-    }
-    &::-webkit-scrollbar-thumb {
-        background: var(--scrollbar-thumb-color, rgba(255,255,255,0.08));
-        border-radius: var(--scrollbar-width, 3px);
-    }
+}
+textarea.ww-input-basic::-webkit-scrollbar {
+    width: var(--scrollbar-width, 3px);
+}
+textarea.ww-input-basic::-webkit-scrollbar-track {
+    background: var(--scrollbar-track-color, transparent);
+}
+textarea.ww-input-basic::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-color, rgba(255,255,255,0.08));
+    border-radius: var(--scrollbar-width, 3px);
 }
 </style>
